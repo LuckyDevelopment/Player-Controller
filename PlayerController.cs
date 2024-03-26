@@ -10,8 +10,10 @@ using UnityEngine.TextCore.Text;
 [RequireComponent(typeof(CharacterController))]
 public class PlayerController : MonoBehaviour
 {
-    // This script controls the player and camera.
+    // REQUIRES AN INPUT ACTION MAP SETUP! SCROLL DOWN TO FIND THE VARIABLES THAT USE IT!  -----------------------------------------------------------------------------
 
+    // This script controls the player and camera.
+    
     // PUBLICS
     [Header("Object Settings")]
     [SerializeField] private Transform Orientation;
@@ -58,6 +60,7 @@ public class PlayerController : MonoBehaviour
     private float MouseY;
     private float cameraRotX;
     private float cameraRotY;
+    private PlayerControls playerControls; // CHANGE PLAYERCONTROLS TO YOUR ACTION MAP NAME.  -----------------------------------------------------------------------------
 
     // Runs when game starts.
     void Start()
@@ -65,6 +68,10 @@ public class PlayerController : MonoBehaviour
         // Get controller and reset velocity to zero.
         controller = GetComponent<CharacterController>();
         velocity = Vector3.zero;
+
+        // New Controls
+        playerControls = new PlayerControls(); // CHANGE TO YOUR ACTION MAP NAME.  -----------------------------------------------------------------------------
+        playerControls.Enable();
 
         // Assign variables to controller.
         controller.slopeLimit = MaxSlopeAngle;
@@ -102,13 +109,12 @@ public class PlayerController : MonoBehaviour
         controller.Move(moveDirection);
 
 
-        // This handles jumping and adding gravity;
-        if (isGrounded == true)
+        if (isGrounded)
         {
-            velocity.y = -1f * Time.deltaTime;
-        } 
+            velocity.y = -0.1f * Time.deltaTime; 
+        }
 
-        if (Input.GetKeyDown(KeyCode.Space) && isGrounded && canJump)
+        if (playerControls.Gameplay.Jump.ReadValue<float>() > 0.1f && isGrounded && canJump) //CHANGE TO YOUR JUMP AREA -----------------------------------------------------------------------------
         {
             canJump = false;
             velocity.y = (float)Math.Sqrt(JumpPower * -2f * Gravity);
@@ -136,8 +142,8 @@ public class PlayerController : MonoBehaviour
         CameraHolder.position = CameraPosition.position;
 
         // Get input and do some calculations on it.
-        MouseX = Input.GetAxisRaw("Mouse X") * CameraSensitivity * Time.deltaTime;
-        MouseY = Input.GetAxisRaw("Mouse Y") * CameraSensitivity * Time.deltaTime;
+        MouseX = playerControls.Gameplay.Look.ReadValue<Vector2>().x * CameraSensitivity * Time.deltaTime; // CHANGE BOTH TO LOOK VALUES  -----------------------------------------------------------------------------
+        MouseY = playerControls.Gameplay.Look.ReadValue<Vector2>().y * CameraSensitivity * Time.deltaTime;
         
         cameraRotX += MouseX;
         cameraRotY -= MouseY;
@@ -154,10 +160,10 @@ public class PlayerController : MonoBehaviour
     void HandleMovement()
     {
         // Get the input, and decide it the player is sprinting.
-        float playerSpeed = Input.GetKey(KeyCode.LeftShift) == true ? SprintSpeed : WalkSpeed;
+        float playerSpeed = playerControls.Gameplay.Sprint.ReadValue<float>() > 0.1f ? SprintSpeed : WalkSpeed; // CHANGE TO SPRINT VALUES -----------------------------------------------------------------------------
 
-        float horizontal = Input.GetAxis("Horizontal") * playerSpeed * Time.deltaTime;
-        float vertical = Input.GetAxis("Vertical") * playerSpeed * Time.deltaTime;
+        float horizontal = playerControls.Gameplay.Movement.ReadValue<Vector2>().x * playerSpeed * Time.deltaTime; // CHANGE TO MOVEMENT VALUES -----------------------------------------------------------------------------
+        float vertical = playerControls.Gameplay.Movement.ReadValue<Vector2>().y * playerSpeed * Time.deltaTime;
 
 
         // Get direction
